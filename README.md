@@ -7,3 +7,6 @@ Scripted up using: https://processing.org/
 
 Population of 100:
 <img src="img/ex2.png">
+
+Halfway: 
+<img src="img/ex3.png">
