@@ -22,7 +22,8 @@ float percentDisregardful = 0.1;
 // Todo:
 // - age-related risk factor
 // - different probability of transmission when asymptomatic vs symptomatic
-// - separate recovery or deceased
+// - % population which can be tested for simuvirus; slowed/no movement for positive test cases
+// - separate recovered/deceased timing
 
 float meanTimeToBecomeSymptomaticOrRecoverWithoutSymptoms = 6; // avg # days to show symptoms after infection
 float stdTimeToBecomeSymptomaticOrRecoverWithoutSymptoms = 2; // standard deviation from mean
