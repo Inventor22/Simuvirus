@@ -5,7 +5,7 @@ boolean plotInRealTime = true;
 int   maxSimTime = 120; // Seconds
 
 int   populationSize = 200;
-float chanceOfCatching = 0.1; // probability of contracting simuvirus from bumping into an infected circle
+float chanceOfCatching = 0.1; // probability of contracting simuvirus from bumping into an infected individual
 float chanceOfRecoveringWithoutSymtoms = 0.90; // chance to recover without developing symptoms
 float chanceOfPassing = 0.035; // 3.5% across entire population
 float chanceOfLosingImmunity = 0.01; // chance to lose immunity after contracting and recovering from simuvirus
@@ -75,7 +75,7 @@ void setup()
   colorMap.put(HealthState.Deceased, deceased);
   
   for (int i = 0; i < populationSize; i++) {
-    individuals.add(new Individual(i, random(5, width-5), random(5, height-5), random(-PI, PI), random(1.0, 3.0)));
+    individuals.add(new Individual(i, random(r, width-r), random(r, height-r), random(-PI, PI), random(1.0, 3.0)));
   }
   
   int randomSickIndividual = (int)random(0, populationSize);
