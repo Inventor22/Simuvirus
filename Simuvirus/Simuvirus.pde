@@ -7,7 +7,7 @@ int   maxSimTime = 120; // Seconds
 int   populationSize = 200;
 float chanceOfCatching = 0.1; // probability of contracting simuvirus from bumping into an infected individual
 float chanceOfRecoveringWithoutSymtoms = 0.90; // chance to recover without developing symptoms
-float chanceOfPassing = 0.035; // 3.5% across entire population
+float chanceOfPassingAway = 0.035; // 3.5% across entire population
 float chanceOfLosingImmunity = 0.01; // chance to lose immunity after contracting and recovering from simuvirus
 
 // Todo:
@@ -170,7 +170,7 @@ class Individual
   public HealthState state;
   color healthColor;
   color contagiousColor;
-  boolean willDie = false;
+  boolean willPassAway = false;
   boolean willRecoverWithoutSymptoms = false;
   boolean canBeReinfected = false;
   
@@ -242,7 +242,7 @@ class Individual
                 stdTimeToBecomeSymptomaticOrRecoverWithoutSymptoms);
           this.willRecoverWithoutSymptoms = random(1.0) < chanceOfRecoveringWithoutSymtoms;
           this.canBeReinfected = random(1.0) < chanceOfLosingImmunity;
-          this.willDie = random(1.0) < chanceOfPassing;
+          this.willPassAway = random(1.0) < chanceOfPassingAway;
           break;
       
       case Symptomatic:
@@ -357,7 +357,7 @@ class Individual
     {
        if (now - timeBecameContagious > timeToBecomeSymptomaticOrRecoverWithoutSymptoms)
        {
-         if (this.willRecoverWithoutSymptoms && !this.willDie)
+         if (this.willRecoverWithoutSymptoms && !this.willPassAway)
          {
            this.setHealth(HealthState.RecoveredButContagious);           
          }
@@ -371,7 +371,7 @@ class Individual
     {
        if (now - timeBecameSymptomatic > timeToBecomeRecoveredOrDie)
        {
-          if(this.willDie)
+          if(this.willPassAway)
           {
             this.setHealth(HealthState.Deceased);
           }
