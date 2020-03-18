@@ -5,5 +5,9 @@ Inspired by this: https://www.washingtonpost.com/graphics/2020/world/corona-simu
 
 Scripted up using: https://processing.org/
 
-<img src="img/ex0.png">
-<img src="img/ex1.png">
+Population 100:
+<img src="img/ex0.png" width="400">
+
+Population 200:
+<img src="img/ex0.png" width="400">
+<img src="img/ex1.png" width="400">
