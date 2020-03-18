@@ -4,22 +4,30 @@ import java.util.LinkedHashMap;
 boolean plotInRealTime = true;
 int   maxSimTime = 120; // Seconds
 
-int   populationSize = 200;
-float chanceOfCatching = 0.1; // probability of contracting simuvirus from bumping into an infected individual
+int   populationSize = 100;
+float chanceOfCatching = 0.2; // probability of contracting simuvirus from bumping into an infected individual
 float chanceOfRecoveringWithoutSymtoms = 0.90; // chance to recover without developing symptoms
 float chanceOfPassingAway = 0.035; // 3.5% across entire population
 float chanceOfLosingImmunity = 0.01; // chance to lose immunity after contracting and recovering from simuvirus
 
+// percent of population infected before considered a pandemic and social distancing recommended
+float percentInfectedForPandemic = 0.3;
+// % population infected to consider no longer a pandemic, only after a pandemic has been issued
+float percentInfectedForNotPandemic = 0.1;
+// % reduced movement speed during social distancing times
+float movementSlowdownDuringPandemic = 1.0/20;
+// % of individuals who disregard social distancing recommendation and continue moving at max speed
+float percentDisregardful = 0.1;
+
 // Todo:
 // - age-related risk factor
 // - different probability of transmission when asymptomatic vs symptomatic
-// - social distancing
 // - separate recovery or deceased
 
 float meanTimeToBecomeSymptomaticOrRecoverWithoutSymptoms = 6; // avg # days to show symptoms after infection
 float stdTimeToBecomeSymptomaticOrRecoverWithoutSymptoms = 2; // standard deviation from mean
-float meanTimeToBecomeRecoveredOrDeseased = 6;
-float stdTimeToBecomeRecoveredOrDeseased = 2;
+float meanTimeToBecomeRecoveredOrDeceased = 6;
+float stdTimeToBecomeRecoveredOrDeceased = 2;
 float meanTimeToBecomeTotallyRecovered = 3;
 float stdTimeToBecomeTotallyRecovered = 1;
 float meanTimeToLoseImmunity = 4;
@@ -59,6 +67,7 @@ HashMap<HealthState, Integer> colorMap = new HashMap<HealthState, Integer>();
 int slicesPerFrame = 2;
 long startTime = 0;
 long lastTime = 0;
+boolean pandemicDeclared = false;
 
 void setup() 
 {
@@ -78,6 +87,13 @@ void setup()
     individuals.add(new Individual(i, random(r, width-r), random(r, height-r), random(-PI, PI), random(1.0, 3.0)));
   }
   
+  int numDisregardful = (int)(percentDisregardful * populationSize);
+  println("# Disregardful: " + numDisregardful);
+  for (int i = 0; i < numDisregardful; i++)
+  {
+    individuals.get((int)random(0,populationSize)).IsDisregardful = true; 
+  }  
+  
   int randomSickIndividual = (int)random(0, populationSize);
   individuals.get(randomSickIndividual).setHealth(HealthState.AsymptomaticButContagious);
   startTime = millis();
@@ -88,8 +104,6 @@ boolean simFinished = false;
 boolean drawLegend = true;
 long prevTime = 0;
 int slice = 0;
-
-
 long frame = 0;
 
 void draw()
@@ -125,6 +139,7 @@ void draw()
       
       phs.add(ph);
       
+      pandemicDeclared = ph.isPandemic();
       simFinished = ph.simulationFinished() || (tNow - startTime > maxSimTime*1000);      
       lastTime = tNow;
     }
@@ -168,6 +183,7 @@ class Individual
   int id;
   
   public HealthState state;
+  public boolean IsDisregardful = false;
   color healthColor;
   color contagiousColor;
   boolean willPassAway = false;
@@ -183,6 +199,8 @@ class Individual
   long timeToBecomeTotallyRecovered = 0;
   long timeSinceLastChanceEvent = 0;
   long timeToLoseImmunity = 0;
+  
+  float movementSlowFactor = 1;
   
   Individual (int id, float x, float y, float movementAngle, float movementSpeed) {  
     this.id = id;
@@ -250,8 +268,8 @@ class Individual
           this.contagiousColor = contagious;
           this.timeBecameSymptomatic = millis();
           this.timeToBecomeRecoveredOrDie = this.getNormallyDistributedTime(
-            meanTimeToBecomeRecoveredOrDeseased,
-            stdTimeToBecomeRecoveredOrDeseased);          
+            meanTimeToBecomeRecoveredOrDeceased,
+            stdTimeToBecomeRecoveredOrDeceased);          
           break;
       
       case RecoveredButContagious:
@@ -342,14 +360,23 @@ class Individual
       movementAngle = PI - movementAngle;
     }
     
-    // Don't move if symptomatic or deceased
-    if (this.state == HealthState.Healthy ||
+    // Don't move if symptomatic or deceased or pandemic
+    if ((this.state == HealthState.Healthy ||
         this.state == HealthState.AsymptomaticButContagious ||
         this.state == HealthState.RecoveredButContagious ||
-        this.state == HealthState.RecoveredNotContagious)
+        this.state == HealthState.RecoveredNotContagious))
     {
-      xpos += movementSpeed * cos(movementAngle);
-      ypos += movementSpeed * sin(movementAngle);
+      if (pandemicDeclared && !IsDisregardful)
+      {
+        movementSlowFactor = movementSlowdownDuringPandemic; 
+      }
+      else
+      {
+        movementSlowFactor = 1; 
+      }
+      
+      xpos += movementSpeed * movementSlowFactor * cos(movementAngle);
+      ypos += movementSpeed * movementSlowFactor * sin(movementAngle);
     }
     
     long now = millis();
@@ -449,7 +476,20 @@ public class PopulationHealthSlice
   }
   
   public float percentContagious() {
-    return this.numContagious / this.populationSize;
+    return (float)this.numContagious / this.populationSize;
+  }
+  
+  public boolean isPandemic()
+  {
+    float pc = this.percentContagious();
+    if (!pandemicDeclared)
+    {
+      return pc > percentInfectedForPandemic;
+    }
+    else // factor in a poorly implemented hysterysis loop
+    {
+      return pc > percentInfectedForNotPandemic;
+    }
   }
   
   public void drawLine(int x, int y, int verticalPixels, int totalPop)

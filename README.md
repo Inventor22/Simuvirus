@@ -10,3 +10,7 @@ Population of 100:
 
 Halfway: 
 <img src="img/ex3.png">
+
+
+With social distancing. Recommended when 30% of population is contagious, relieved with 10% population is contagious.
+<img src="img/social-distancing.png">
